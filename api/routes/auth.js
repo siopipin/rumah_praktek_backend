@@ -7,7 +7,4 @@ const authCtrl = require("../controllers/auth");
 router.post("/login", authCtrl.login);
 router.post("/registration", authCtrl.registration);
 router.post("/reset", authCtrl.reset);
-
-// router.get("/cekkode/:kode", authCtrl.cekKode);
-
 module.exports = router;
