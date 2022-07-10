@@ -1,13 +1,10 @@
-var mysql = require("mysql");
-var connection = mysql.createConnection({
-	host: "localhost",
+const mysql = require("mysql2/promise");
+const config = require("../../config");
 
-	//Tambah port ketika menggunakan mac
-	// port: "3306",
-	user: "admin_root",
-	password: "Rakadev12345@",
-	database: "admin_rumahpraktek",
-	dateStrings: "date",
-});
+async function query(sql, params) {
+  const connection = await mysql.createConnection(config.db);
+  const [result] = await connection.execute(sql, params);
+  return result;
+}
 
-module.exports = connection;
+module.exports = { query };
