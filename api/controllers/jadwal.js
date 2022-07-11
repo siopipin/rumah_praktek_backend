@@ -58,6 +58,8 @@ exports.jadwalHariIni = async (req, res, next) => {
   var month = dateObj.getUTCMonth() + 1;
   var day = dateObj.getUTCDate();
 
+  console.log(`${year}-${month}-${day}`);
+
   try {
     const result = await db.query(
       `SELECT * FROM tbl_jadwal where date = "${year}-${month}-${day}"`
