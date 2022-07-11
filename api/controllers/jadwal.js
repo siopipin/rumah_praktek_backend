@@ -70,6 +70,10 @@ exports.jadwalHariIni = async (req, res, next) => {
         data: {},
       });
     } else {
+      const resutlTTL = await db.query(
+        `SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId =  ${rows[0].id}`
+      );
+      rows[0]["filled"] = resutlTTL[0].filled;
       return res.status(200).json({
         status: 200,
         message: "jadwal hari ini",
