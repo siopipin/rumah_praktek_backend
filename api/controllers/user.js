@@ -45,7 +45,7 @@ exports.usersDetail = async (req, res, next) => {
       return res.status(200).json({
         status: 200,
         message: "users detail",
-        data: rows,
+        data: rows[0],
       });
     }
   } catch (error) {
