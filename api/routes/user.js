@@ -8,5 +8,5 @@ router.get("/", checkAuth, userCtrl.users);
 router.get("/:userId", checkAuth, userCtrl.usersDetail);
 router.put("/:userId", checkAuth, userCtrl.userEdit);
 router.get("/:userId/history", checkAuth, userCtrl.usersHistory);
-
+router.post("/:userId/history", checkAuth, userCtrl.usersHistoryAdd);
 module.exports = router;

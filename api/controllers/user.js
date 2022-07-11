@@ -108,3 +108,27 @@ exports.usersHistory = async (req, res, next) => {
     next(error);
   }
 };
+
+//Add jadwal
+exports.usersHistoryAdd = async (req, res, next) => {
+  var data = req.body;
+  try {
+    const result = await db.query(
+      `INSERT INTO tbl_jadwal (date, open, close, quota) VALUES ("${data.date}", "${data.time.open}", "${data.time.close}", ${data.quota})`
+    );
+    if (result.affectedRows) {
+      res.status(201).json({
+        status: 201,
+        message: "schedules created",
+        data: {},
+      });
+    } else {
+      res
+        .status(404)
+        .json({ status: false, message: "add schedules failed", data: {} });
+    }
+  } catch (error) {
+    console.error(`Error while add schedules`, error.message);
+    next(error);
+  }
+};
