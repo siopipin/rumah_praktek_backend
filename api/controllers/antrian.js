@@ -64,6 +64,33 @@ exports.antrianAdd = async (req, res, next) => {
   }
 };
 
+//Edit antrian
+exports.antrianEdit = async (req, res, next) => {
+  const id = req.params.queueId;
+  const data = req.body;
+  try {
+    const rows = await db.query(
+      `update tbl_antrian set status = ${data.status} WHERE id = ${id}`
+    );
+    if (rows.affectedRows) {
+      return res.status(200).json({
+        status: 200,
+        message: "queue updated",
+        data: {},
+      });
+    } else {
+      return res.status(404).json({
+        status: 404,
+        message: "queue not updated",
+        data: {},
+      });
+    }
+  } catch (error) {
+    console.error(`Error while update queue`, error.message);
+    next(error);
+  }
+};
+
 //Users Detail
 exports.serviceDetail = async (req, res, next) => {
   const id = req.params.serviceId;
@@ -87,34 +114,6 @@ exports.serviceDetail = async (req, res, next) => {
     }
   } catch (error) {
     console.error(`Error while get service detail`, error.message);
-    next(error);
-  }
-};
-
-//Edit Service
-exports.servicesEdit = async (req, res, next) => {
-  const id = req.params.serviceId;
-  const data = req.body;
-  try {
-    const rows = await db.query(
-      `update tbl_service set name = "${data.name}", description = "${data.description}", isActive= ${data.isActive}
-      WHERE id = ${id}`
-    );
-    if (rows.affectedRows) {
-      return res.status(200).json({
-        status: 200,
-        message: "Service updated",
-        data: {},
-      });
-    } else {
-      return res.status(404).json({
-        status: 404,
-        message: "service not updated",
-        data: {},
-      });
-    }
-  } catch (error) {
-    console.error(`Error while update service`, error.message);
     next(error);
   }
 };

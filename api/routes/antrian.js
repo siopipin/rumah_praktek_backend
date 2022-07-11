@@ -6,9 +6,9 @@ const checkAuth = require("../middleware/check-auth");
 
 router.get("/", checkAuth, antrianCtrl.antrian);
 router.post("/", checkAuth, antrianCtrl.antrianAdd);
+router.put("/:queueId", checkAuth, antrianCtrl.antrianEdit);
 
 // router.get("/:serviceId", checkAuth, serviceCtrl.serviceDetail);
-// router.put("/:serviceId", checkAuth, serviceCtrl.servicesEdit);
 // router.delete("/:serviceId", checkAuth, serviceCtrl.servicesDelete);
 
 module.exports = router;
