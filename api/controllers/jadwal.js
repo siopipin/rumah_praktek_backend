@@ -107,106 +107,29 @@ exports.jadwalAdd = async (req, res, next) => {
   }
 };
 
-//Edit antrian
-exports.antrianEdit = async (req, res, next) => {
-  const id = req.params.queueId;
+//Edit jadwal
+exports.jadwalEdit = async (req, res, next) => {
+  const id = req.params.scheduleId;
   const data = req.body;
   try {
     const rows = await db.query(
-      `update tbl_antrian set status = ${data.status} WHERE id = ${id}`
+      `update tbl_jadwal set isActive = ${data.isActive}, date = "${data.date}", open = "${data.time.open}", close = "${data.time.close}", quota = ${data.quota}, message = "${data.message}" WHERE id = ${id}`
     );
     if (rows.affectedRows) {
       return res.status(200).json({
         status: 200,
-        message: "queue updated",
+        message: "schedules updated",
         data: {},
       });
     } else {
       return res.status(404).json({
         status: 404,
-        message: "queue not updated",
+        message: "schedules not updated",
         data: {},
       });
     }
   } catch (error) {
-    console.error(`Error while update queue`, error.message);
-    next(error);
-  }
-};
-
-//List antrian by user
-exports.antrianUser = async (req, res, next) => {
-  try {
-    const result = await db.query(
-      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.status, tbl_service.name, tbl_antrian.estimasi, tbl_jadwal.date FROM tbl_antrian JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.userId = ${req.params.userId} AND tbl_antrian.status != 4`
-    );
-    const rows = helper.emptyOrRows(result);
-    if (rows.length < 1) {
-      return res.status(404).json({
-        status: 404,
-        message: "antrian not found",
-        data: {},
-      });
-    } else {
-      return res.status(200).json({
-        status: 200,
-        message: "all antrian",
-        data: rows,
-      });
-    }
-  } catch (error) {
-    console.error(`Error while get list antrian`, error.message);
-    next(error);
-  }
-};
-
-//Antrian Detail
-exports.antrianDetail = async (req, res, next) => {
-  const id = req.params.queueId;
-  try {
-    const result = await db.query(
-      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.status, tbl_users.name, tbl_users.phoneNumber, tbl_service.name, tbl_antrian.status, tbl_jadwal.date, tbl_antrian.husbandName, tbl_antrian.address, tbl_antrian.estimasi, tbl_antrian.birth FROM tbl_antrian JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.id = ${id}`
-    );
-    const rows = helper.emptyOrRows(result);
-    if (rows.length < 1) {
-      return res.status(404).json({
-        status: 404,
-        message: "antrian not found",
-        data: {},
-      });
-    } else {
-      return res.status(200).json({
-        status: 200,
-        message: "antrian detail",
-        data: rows[0],
-      });
-    }
-  } catch (error) {
-    console.error(`Error while get service detail`, error.message);
-    next(error);
-  }
-};
-
-//Edit Service
-exports.antrianDelete = async (req, res, next) => {
-  const id = req.params.queueId;
-  try {
-    const rows = await db.query(`delete from tbl_antrian where id = ${id}`);
-    if (rows.affectedRows) {
-      return res.status(200).json({
-        status: 200,
-        message: "queue canceled",
-        data: {},
-      });
-    } else {
-      return res.status(404).json({
-        status: 404,
-        message: "antrian not deleted",
-        data: {},
-      });
-    }
-  } catch (error) {
-    console.error(`Error while delete antrian`, error.message);
+    console.error(`Error while update schedules`, error.message);
     next(error);
   }
 };
