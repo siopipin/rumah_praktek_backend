@@ -6,11 +6,10 @@ const db = require("./db");
 //User Customer Login
 exports.login = async (req, res, next) => {
   try {
-    const temp = await db.query(
+    const result = await db.query(
       `select * from tbl_users where phoneNumber = ${req.body.phoneNumber} `
     );
-    const rows = helper.emptyOrRows(temp);
-    console.log(rows);
+    const rows = helper.emptyOrRows(result);
 
     if (rows.length < 1) {
       return res.status(404).json({
@@ -72,8 +71,6 @@ exports.login = async (req, res, next) => {
 
 exports.registration = async (req, res, next) => {
   var data = req.body;
-  console.log(data);
-
   try {
     bcrypt.hash(data.password, 11, async (error, hash) => {
       if (error) {
@@ -86,7 +83,7 @@ exports.registration = async (req, res, next) => {
         );
         if (result.affectedRows) {
           res.status(200).json({
-            status: true,
+            status: 200,
             message: "register success",
             data: {},
           });
