@@ -31,32 +31,46 @@ exports.antrian = async (req, res, next) => {
 exports.antrianAdd = async (req, res, next) => {
   var data = req.body;
   try {
-    var dateObj = new Date();
-    var month = dateObj.getUTCMonth() + 1;
-    var day = dateObj.getUTCDate();
+    //Jika filled antrian < quota harian.
 
-    const resultSetting = await db.query(`select queuePrefix from tbl_setting`);
-
-    var kode = `${resultSetting[0].queuePrefix}${month}${day}_ID${data.userId}`;
-    console.log(kode);
-
-    const result = await db.query(
-      `INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code) VALUES (${data.serviceId}, ${data.userId}, ${data.scheduleId}, "${data.name}", ${data.phoneNumber}, "${data.email}", "${data.husbandName}", "${data.address}", "${data.birth}", "${kode}")`
+    const cekAntrian = await db.query(
+      `SELECT COUNT(tbl_antrian.id) as filled, tbl_jadwal.quota FROM tbl_antrian JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId WHERE jadwalId = ${data.scheduleId}`
     );
-    if (result.affectedRows) {
-      const resultAntrian = await db.query(
-        `SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_jadwal.date, tbl_service.name FROM tbl_antrian JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = "${kode}"`
+
+    console.log(cekAntrian[0]);
+    if (cekAntrian[0].filled < cekAntrian[0].quota) {
+      var dateObj = new Date();
+      var month = dateObj.getUTCMonth() + 1;
+      var day = dateObj.getUTCDate();
+
+      const resultSetting = await db.query(
+        `select queuePrefix from tbl_setting`
       );
 
-      res.status(201).json({
-        status: 201,
-        message: "antrian created",
-        data: resultAntrian[0],
-      });
+      var kode = `${resultSetting[0].queuePrefix}${month}${day}_ID${data.userId}`;
+      console.log(kode);
+
+      const result = await db.query(
+        `INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code) VALUES (${data.serviceId}, ${data.userId}, ${data.scheduleId}, "${data.name}", ${data.phoneNumber}, "${data.email}", "${data.husbandName}", "${data.address}", "${data.birth}", "${kode}")`
+      );
+      if (result.affectedRows) {
+        const resultAntrian = await db.query(
+          `SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_jadwal.date, tbl_service.name FROM tbl_antrian JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = "${kode}"`
+        );
+
+        res.status(201).json({
+          status: 201,
+          message: "antrian created",
+          data: resultAntrian[0],
+        });
+      } else {
+        res
+          .status(404)
+          .json({ status: false, message: "add antrian failed", data: {} });
+      }
     } else {
-      res
-        .status(404)
-        .json({ status: false, message: "add antrian failed", data: {} });
+      //penuh
+      res.status(400).json({ status: 400, message: "Antrian Penuh", data: {} });
     }
   } catch (error) {
     console.error(`Error while add antrian`, error.message);
