@@ -69,7 +69,7 @@ exports.serviceDetail = async (req, res, next) => {
       return res.status(200).json({
         status: 200,
         message: "service detail",
-        data: rows,
+        data: rows[0],
       });
     }
   } catch (error) {
