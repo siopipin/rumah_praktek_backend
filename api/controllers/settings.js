@@ -5,7 +5,7 @@ const helper = require("../../helper");
 exports.settings = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT id, queuePrefix, description, date_updated FROM tbl_setting"
+      "SELECT id, title, queuePrefix, description, date_updated FROM tbl_setting"
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
@@ -33,7 +33,7 @@ exports.settingsEdit = async (req, res, next) => {
   const data = req.body;
   try {
     const rows = await db.query(
-      `update tbl_setting set queuePrefix = "${data.queuePrefix}", description = "${data.description}"
+      `update tbl_setting set title="${data.title}", queuePrefix = "${data.queuePrefix}", description = "${data.description}"
       WHERE id = ${id}`
     );
     if (rows.affectedRows) {
