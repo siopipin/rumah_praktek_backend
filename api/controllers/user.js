@@ -114,12 +114,16 @@ exports.usersHistoryAdd = async (req, res, next) => {
   var data = req.body;
   try {
     const result = await db.query(
-      `INSERT INTO tbl_jadwal (date, open, close, quota) VALUES ("${data.date}", "${data.time.open}", "${data.time.close}", ${data.quota})`
+      `INSERT INTO tbl_history_medis (userId, serviceId, description) VALUES (${req.params.userId}, ${data.serviceId}, "${data.description}")`
     );
     if (result.affectedRows) {
+      const temp = await db.query(
+        `update tbl_antrian set duration = ${data.duration} WHERE id = ${data.id}`
+      );
+
       res.status(201).json({
         status: 201,
-        message: "schedules created",
+        message: "usersHistory created",
         data: {},
       });
     } else {
