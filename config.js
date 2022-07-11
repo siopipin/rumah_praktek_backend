@@ -11,6 +11,9 @@ const config = {
   HOST: process.env.HOST || "127.0.0.1",
   PORT: process.env.PORT || 3001,
 
+  //JWT
+  JWT_KEY: process.env.JWT_KEY || "rumahpraktek",
+
   //DB Configuration
   db: {
     host: process.env.DBHOST || "127.0.0.1",

@@ -3,6 +3,8 @@ const app = require("./app");
 const server = http.createServer(app);
 const config = require("./config");
 
+config.JWT_KEY;
+
 server.listen(config.PORT, config.HOST, function () {
   console.log(`${__dirname}`);
   console.log(`App listening on ${config.HOST}:${config.PORT}`);
