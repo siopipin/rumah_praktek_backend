@@ -20,6 +20,9 @@ const config = {
     user: process.env.DBUSER || "root",
     password: process.env.DBPASSWORD || "root",
     database: process.env.DATABASE || "db_rumahpraktek",
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
   },
 };
 
