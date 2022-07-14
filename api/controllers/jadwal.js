@@ -91,21 +91,34 @@ exports.jadwalHariIni = async (req, res, next) => {
 //Add jadwal
 exports.jadwalAdd = async (req, res, next) => {
   var data = req.body;
-  console.log(data.time.start);
+
   try {
-    const result = await db.query(
-      `INSERT INTO tbl_jadwal (date, open, close, quota) VALUES ("${data.date}", "${data.time.open}", "${data.time.close}", ${data.quota})`
+    //cek jika ada tanggal yang sama.
+    const resultTgl = await db.query(
+      `SELECT date FROM tbl_jadwal WHERE date = "${data.date}" `
     );
-    if (result.affectedRows) {
-      res.status(201).json({
-        status: 201,
-        message: "schedules created",
+    console.log("result ttl: " + resultTgl.length);
+    if (resultTgl.length === 0) {
+      const result = await db.query(
+        `INSERT INTO tbl_jadwal (date, open, close, quota) VALUES ("${data.date}", "${data.time.open}", "${data.time.close}", ${data.quota})`
+      );
+      if (result.affectedRows) {
+        res.status(201).json({
+          status: 201,
+          message: "schedules created",
+          data: {},
+        });
+      } else {
+        res
+          .status(404)
+          .json({ status: false, message: "add schedules failed", data: {} });
+      }
+    } else {
+      res.status(404).json({
+        status: false,
+        message: "Schedule date has already been taken",
         data: {},
       });
-    } else {
-      res
-        .status(404)
-        .json({ status: false, message: "add schedules failed", data: {} });
     }
   } catch (error) {
     console.error(`Error while add schedules`, error.message);
