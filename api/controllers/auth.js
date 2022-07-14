@@ -79,7 +79,7 @@ exports.registration = async (req, res, next) => {
         data.password = hash;
 
         const result = await db.query(
-          `INSERT INTO tbl_users (name, phoneNumber, password) VALUES ("${data.name}", ${data.phoneNumber}, "${data.password}")`
+          `INSERT INTO tbl_users (name, phoneNumber, password) VALUES ("${data.name}", "${data.phoneNumber}", "${data.password}")`
         );
         if (result.affectedRows) {
           res.status(200).json({
