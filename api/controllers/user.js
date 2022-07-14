@@ -32,7 +32,7 @@ exports.usersDetail = async (req, res, next) => {
   const id = req.params.userId;
   try {
     const result = await db.query(
-      `SELECT id, role, name, phoneNumber, email, isActivated, birth, husbandName, address, rekamMedis FROM tbl_users WHERE id = ${id}`
+      `SELECT id, role, name, phoneNumber, email, isActivated, birth, husbandName, address, medicalRecordsNumber FROM tbl_users WHERE id = ${id}`
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
@@ -138,9 +138,9 @@ exports.usersHistoryAdd = async (req, res, next) => {
         `select * from tbl_users WHERE id = ${resultGetAntrian[0].userId}`
       );
       console.log("user id pada tbl_user: " + resultGetAntrian[0].userId);
-      console.log("status Rekam Medis: " + resultUser[0].rekamMedis);
+      console.log("status Rekam Medis: " + resultUser[0].medicalRecordsNumber);
 
-      if (resultUser[0].rekamMedis == null) {
+      if (resultUser[0].medicalRecordsNumber == null) {
         let resultUpdateRekamMedis = await db.query(
           `update tbl_users set rekamMedis = "${noRiwayat}" WHERE id = ${resultGetAntrian[0].userId}`
         );
