@@ -121,10 +121,28 @@ exports.usersHistoryAdd = async (req, res, next) => {
     const result = await db.query(
       `INSERT INTO tbl_history_medis (userId, serviceId, description) VALUES (${req.params.userId}, ${data.serviceId}, "${data.description}")`
     );
-    if (result.affectedRows) {
-      const temp = await db.query(
-        `update tbl_antrian set duration = ${data.duration} WHERE id = ${data.id}`
+    const result1 = await db.query(
+      `update tbl_antrian set duration = ${data.duration} WHERE id = ${data.id}`
+    );
+
+    if (result.affectedRows === 1 && result1.affectedRows === 1) {
+      const resultGetAntrian = await db.query(
+        `select * from tbl_antrian WHERE id = ${data.id}`
       );
+      let rnd = Math.floor(Math.random() * 9999) + 1;
+      let noRiwayat = `${resultGetAntrian[0].code}${rnd}`;
+
+      console.log(`nilai random: ${noRiwayat}`);
+
+      const resultUser = await db.query(
+        `select * from tbl_users WHERE id = ${resultGetAntrian[0].userId}`
+      );
+
+      if (resultUser[0].rekamMedis === null) {
+        await db.query(
+          `update tbl_users set rekamMedis = "${noRiwayat}" WHERE id = ${data.id}`
+        );
+      }
 
       res.status(201).json({
         status: 201,
