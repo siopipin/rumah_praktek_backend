@@ -137,11 +137,15 @@ exports.usersHistoryAdd = async (req, res, next) => {
       const resultUser = await db.query(
         `select * from tbl_users WHERE id = ${resultGetAntrian[0].userId}`
       );
+      console.log("user id pada tbl_user: " + resultGetAntrian[0].userId);
+      console.log("status Rekam Medis" + resultUser[0].rekamMedis);
 
-      if (resultUser[0].rekamMedis === null) {
-        await db.query(
+      if (resultUser[0].rekamMedis == null) {
+        let resultUpdateRekamMedis = await db.query(
           `update tbl_users set rekamMedis = "${noRiwayat}" WHERE id = ${data.id}`
         );
+
+        console.log(resultUpdateRekamMedis.affectedRows);
       }
 
       res.status(201).json({
