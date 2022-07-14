@@ -58,9 +58,14 @@ exports.usersDetail = async (req, res, next) => {
 exports.userEdit = async (req, res, next) => {
   const id = req.params.userId;
   const data = req.body;
+
+  tglLahir = data.birth === "" ? "2000-01-01" : data.birth;
+
+  console.log("tgl: " + tglLahir);
+
   try {
     const rows = await db.query(
-      `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = ${data.phoneNumber}, email = "${data.email}", birth = "${data.birth}", husbandName= "${data.husbandName}", address= "${data.address}"
+      `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = ${data.phoneNumber}, email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}"
       WHERE id = ${id}`
     );
     if (rows.affectedRows) {
