@@ -49,7 +49,7 @@ exports.usersDetail = async (req, res, next) => {
       });
     }
   } catch (error) {
-    console.error(`Error while get list user`, error.message);
+    console.error(`Error while get detail user`, error.message);
     next(error);
   }
 };

@@ -100,14 +100,28 @@ exports.registration = async (req, res, next) => {
 };
 
 exports.me = (req, res, next) => {
-  res.status(200).json({
-    status: 200,
-    data: {
-      id: req.userData.id,
-      role: req.userData.role,
-      name: req.userData.name,
-    },
-  });
+  try {
+    const result = await db.query(
+      `SELECT id, role, name, phoneNumber, email, isActivated, birth, husbandName, address, medicalRecordsNumber, img FROM tbl_users WHERE id = ${req.userData.id}`
+    );
+    const rows = helper.emptyOrRows(result);
+    if (rows.length < 1) {
+      return res.status(404).json({
+        status: 404,
+        message: "user not found",
+        data: {},
+      });
+    } else {
+      return res.status(200).json({
+        status: 200,
+        message: "users detail",
+        data: rows[0],
+      });
+    }
+  } catch (error) {
+    console.error(`Error while get detail user`, error.message);
+    next(error);
+  }
 };
 
 //Cek HP untuk lupa kata sandi.
