@@ -64,22 +64,44 @@ exports.userEdit = async (req, res, next) => {
   console.log("tgl: " + tglLahir);
 
   try {
-    const rows = await db.query(
-      `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = ${data.phoneNumber}, email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}"
-      WHERE id = ${id}`
-    );
-    if (rows.affectedRows) {
-      return res.status(200).json({
-        status: 200,
-        message: "users updated",
-        data: {},
-      });
+    console.log("status file " + req.file);
+
+    if (!req.file) {
+      const rows = await db.query(
+        `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = ${data.phoneNumber}, email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}"
+        WHERE id = ${id}`
+      );
+      if (rows.affectedRows) {
+        return res.status(200).json({
+          status: 200,
+          message: "users updated",
+          data: {},
+        });
+      } else {
+        return res.status(404).json({
+          status: 404,
+          message: "user not updated",
+          data: {},
+        });
+      }
     } else {
-      return res.status(404).json({
-        status: 404,
-        message: "user not updated",
-        data: {},
-      });
+      //Ada file
+      const rows = await db.query(
+        `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = ${data.phoneNumber}, email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}", img = "${req.file.filename}" WHERE id = ${id}`
+      );
+      if (rows.affectedRows) {
+        return res.status(200).json({
+          status: 200,
+          message: "users updated",
+          data: {},
+        });
+      } else {
+        return res.status(404).json({
+          status: 404,
+          message: "user not updated",
+          data: {},
+        });
+      }
     }
   } catch (error) {
     console.error(`Error while update user`, error.message);
