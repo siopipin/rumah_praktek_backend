@@ -99,7 +99,7 @@ exports.registration = async (req, res, next) => {
   }
 };
 
-exports.me = (req, res, next) => {
+exports.me = async (req, res, next) => {
   try {
     const result = await db.query(
       `SELECT id, role, name, phoneNumber, email, isActivated, birth, husbandName, address, medicalRecordsNumber, img FROM tbl_users WHERE id = ${req.userData.id}`
