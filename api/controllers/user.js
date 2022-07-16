@@ -32,7 +32,7 @@ exports.usersDetail = async (req, res, next) => {
   const id = req.params.userId;
   try {
     const result = await db.query(
-      `SELECT id, role, name, phoneNumber, email, isActivated, birth, husbandName, address, medicalRecordsNumber FROM tbl_users WHERE id = ${id}`
+      `SELECT id, role, name, phoneNumber, email, isActivated, birth, husbandName, address, medicalRecordsNumber, img FROM tbl_users WHERE id = ${id}`
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
