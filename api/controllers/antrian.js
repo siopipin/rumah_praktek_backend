@@ -5,6 +5,31 @@ const helper = require("../../helper");
 exports.antrian = async (req, res, next) => {
   try {
     const result = await db.query(
+      "SELECT tbl_antrian.id, tbl_antrian.code, tbl_users.id as userId, tbl_users.name, tbl_users.phoneNumber, tbl_users.email, tbl_service.name, tbl_antrian.status, tbl_jadwal.date, tbl_jadwal.isActive, tbl_jadwal.message, tbl_service.id as serviceId FROM tbl_antrian JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_jadwal.isActive = 1 ORDER BY tbl_antrian.date_created DESC"
+    );
+    const rows = helper.emptyOrRows(result);
+    if (rows.length < 1) {
+      return res.status(404).json({
+        status: 404,
+        message: "antrian not found",
+        data: {},
+      });
+    } else {
+      return res.status(200).json({
+        status: 200,
+        message: "all antrian",
+        data: rows,
+      });
+    }
+  } catch (error) {
+    console.error(`Error while get list antrian`, error.message);
+    next(error);
+  }
+};
+
+exports.antrianAll = async (req, res, next) => {
+  try {
+    const result = await db.query(
       "SELECT tbl_antrian.id, tbl_antrian.code, tbl_users.id as userId, tbl_users.name, tbl_users.phoneNumber, tbl_users.email, tbl_service.name, tbl_antrian.status, tbl_jadwal.date, tbl_jadwal.isActive, tbl_jadwal.message, tbl_service.id as serviceId FROM tbl_antrian JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_users on tbl_users.id = tbl_antrian.userId ORDER BY tbl_antrian.date_created DESC"
     );
     const rows = helper.emptyOrRows(result);
@@ -47,7 +72,9 @@ exports.antrianAdd = async (req, res, next) => {
         `select queuePrefix from tbl_setting`
       );
 
-      var kode = `${resultSetting[0].queuePrefix}${month}${day}_ID${data.userId}`;
+      let rnd = Math.floor(Math.random() * 99) + 1;
+
+      var kode = `${resultSetting[0].queuePrefix}${month}${day}_ID${data.userId}${rnd}`;
       console.log(kode);
 
       const result = await db.query(
