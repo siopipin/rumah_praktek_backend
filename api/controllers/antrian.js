@@ -67,9 +67,6 @@ exports.antrianAdd = async (req, res, next) => {
       `SELECT quota FROM tbl_jadwal WHERE id = "${req.body.scheduleId}"`
     );
 
-    // JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId WHERE jadwalId = "${req.body.scheduleId}"
-
-    console.log(cekAntrian[0]);
     if (cekAntrian[0].filled < cekQuota[0].quota) {
       var dateObj = new Date();
       var month = dateObj.getUTCMonth() + 1;
@@ -79,14 +76,22 @@ exports.antrianAdd = async (req, res, next) => {
         `select queuePrefix from tbl_setting`
       );
 
-      let rnd = Math.floor(Math.random() * 99) + 1;
-
-      var kode = `${resultSetting[0].queuePrefix}${month}${day}_ID${data.userId}${rnd}`;
+      var kode = `${resultSetting[0].queuePrefix}${month}${day}_ID0${cekAntrian[0].filled}`;
       console.log(kode);
+
+      console.log("status rekam medis : " + data.medicalRecordsNumber);
+
+      if (data.medicalRecordsNumber) {
+        console.log("akan simpan no.rek medis: " + data.medicalRecordsNumber);
+        await db.query(
+          `update tbl_users set medicalRecordsNumber = "${data.medicalRecordsNumber}" WHERE id = ${data.userId}`
+        );
+      }
 
       const result = await db.query(
         `INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code) VALUES (${data.serviceId}, ${data.userId}, ${data.scheduleId}, "${data.name}", ${data.phoneNumber}, "${data.email}", "${data.husbandName}", "${data.address}", "${data.birth}", "${kode}")`
       );
+
       if (result.affectedRows) {
         const resultAntrian = await db.query(
           `SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_jadwal.date, tbl_service.name FROM tbl_antrian JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = "${kode}"`
