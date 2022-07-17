@@ -127,13 +127,11 @@ exports.me = async (req, res, next) => {
 //Cek HP untuk lupa kata sandi.
 //Jika ada nomor hp generate kode
 exports.reset = async (req, res, next) => {
-  var id = req.body.id;
-  var phoneNumber = req.body.phoneNumber;
-  var password = req.body.password;
+  var data = req.body;
 
   try {
     const result = await db.query(
-      `select * from tbl_users where phoneNumber = ${phoneNumber} `
+      `select * from tbl_users where phoneNumber = ${data.phoneNumber} `
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
@@ -143,15 +141,19 @@ exports.reset = async (req, res, next) => {
         data: {},
       });
     } else {
-      bcrypt.hash(password, 11, async (error, hash) => {
+      bcrypt.hash(data.password, 11, async (error, hash) => {
         if (error) {
           res.status(500).json({ status: 500, message: error, data: {} });
         } else {
-          password = hash;
-          const result = db.query(
-            `UPDATE tbl_users SET password= ${password} WHERE id = ${id}}`
+          data.password = hash;
+          console.log("hp " + data.phoneNumber);
+          console.log("pswd " + data.password);
+
+          const resultUpdate = await db.query(
+            `update tbl_users set password = "${data.password}" WHERE phoneNumber = ${data.phoneNumber}`
           );
-          if (result.affectedRows) {
+          console.log(resultUpdate.affectedRows);
+          if (resultUpdate.affectedRows) {
             res.status(200).json({
               status: 200,
               message: "Kata sandi berhasil diganti, silahkan login ulang.",
