@@ -5,7 +5,7 @@ const helper = require("../../helper");
 exports.users = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT id, role, name, phoneNumber, email FROM tbl_users"
+      "SELECT id, role, name, phoneNumber, email, img FROM tbl_users"
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
