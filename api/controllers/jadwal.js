@@ -4,7 +4,7 @@ const helper = require("../../helper");
 //List jadwal
 exports.jadwal = async (req, res, next) => {
   try {
-    const result = await db.query("SELECT * FROM tbl_jadwal");
+    const result = await db.query("SELECT * FROM tbl_jadwal ORDER BY date ASC");
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
       return res.status(404).json({
