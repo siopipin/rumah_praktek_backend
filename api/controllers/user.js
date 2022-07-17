@@ -151,23 +151,28 @@ exports.usersHistoryAdd = async (req, res, next) => {
       const resultGetAntrian = await db.query(
         `select * from tbl_antrian WHERE id = ${data.id}`
       );
-      let rnd = Math.floor(Math.random() * 9999) + 1;
-      let noRiwayat = `${resultGetAntrian[0].code}${rnd}`;
+      // let rnd = Math.floor(Math.random() * 9999) + 1;
+      // let noRiwayat = `${resultGetAntrian[0].code}${rnd}`;
 
-      console.log(`nilai random: ${noRiwayat}`);
+      // console.log(`nilai random: ${noRiwayat}`);
 
-      const resultUser = await db.query(
-        `select * from tbl_users WHERE id = ${resultGetAntrian[0].userId}`
-      );
-      console.log("user id pada tbl_user: " + resultGetAntrian[0].userId);
-      console.log("status Rekam Medis: " + resultUser[0].medicalRecordsNumber);
+      // const resultUser = await db.query(
+      //   `select * from tbl_users WHERE id = ${resultGetAntrian[0].userId}`
+      // );
+      // console.log("user id pada tbl_user: " + resultGetAntrian[0].userId);
+      // console.log("status Rekam Medis: " + resultUser[0].medicalRecordsNumber);
 
-      if (resultUser[0].medicalRecordsNumber == null) {
-        let resultUpdateRekamMedis = await db.query(
-          `update tbl_users set rekamMedis = "${noRiwayat}" WHERE id = ${resultGetAntrian[0].userId}`
+      // if (resultUser[0].medicalRecordsNumber == null) {
+
+      //   console.log(resultUpdateRekamMedis.affectedRows);
+      // }
+      console.log("status medicalrNumber: " + data.medicalRecordsNumber);
+      if (data.medicalRecordsNumber != "") {
+        console.log("sedang tambah medicalrecordNumber");
+        let resUpdate = await db.query(
+          `update tbl_users set medicalRecordsNumber = "${data.medicalRecordsNumber}" WHERE id = ${req.params.userId}`
         );
-
-        console.log(resultUpdateRekamMedis.affectedRows);
+        console.log(resUpdate.affectedRows);
       }
 
       res.status(201).json({
