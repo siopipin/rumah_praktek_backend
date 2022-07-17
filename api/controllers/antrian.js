@@ -59,13 +59,18 @@ exports.antrianAdd = async (req, res, next) => {
     //Jika filled antrian < quota harian.
 
     console.log("Schedule ID: " + req.body.scheduleId);
-
-    const cekAntrian = await db.query(
-      `SELECT COUNT(tbl_antrian.id) as filled, tbl_jadwal.quota FROM tbl_antrian JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId WHERE jadwalId = "${req.body.scheduleId}"`
+    let cekAntrian = await db.query(
+      `SELECT COUNT(tbl_antrian.id) as filled FROM tbl_antrian WHERE jadwalId = "${req.body.scheduleId}"`
     );
 
+    let cekQuota = await db.query(
+      `SELECT quota FROM tbl_jadwal WHERE id = "${req.body.scheduleId}"`
+    );
+
+    // JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId WHERE jadwalId = "${req.body.scheduleId}"
+
     console.log(cekAntrian[0]);
-    if (cekAntrian[0].filled < cekAntrian[0].quota) {
+    if (cekAntrian[0].filled < cekQuota[0].quota) {
       var dateObj = new Date();
       var month = dateObj.getUTCMonth() + 1;
       var day = dateObj.getUTCDate();
