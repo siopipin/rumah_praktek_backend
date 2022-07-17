@@ -58,6 +58,8 @@ exports.antrianAdd = async (req, res, next) => {
   try {
     //Jika filled antrian < quota harian.
 
+    console.log("Schedule ID: " + req.body.scheduleId);
+
     const cekAntrian = await db.query(
       `SELECT COUNT(tbl_antrian.id) as filled, tbl_jadwal.quota FROM tbl_antrian JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId WHERE jadwalId = ${req.body.scheduleId}`
     );
