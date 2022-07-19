@@ -164,7 +164,7 @@ exports.rekamMedisEdit = async (req, res, next) => {
   const data = req.body;
   try {
     const rows = await db.query(
-      `update tbl_users set medicalRecordsNumber = ${data.medicalRecordsNumber} WHERE id = ${id}`
+      `update tbl_users set medicalRecordsNumber = "${data.medicalRecordsNumber}" WHERE id = ${id}`
     );
     if (rows.affectedRows) {
       return res.status(200).json({
