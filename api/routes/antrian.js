@@ -10,6 +10,7 @@ router.post("/", checkAuth, antrianCtrl.antrianAdd);
 router.put("/list/:queueId", checkAuth, antrianCtrl.antrianEdit);
 router.get("/list/:queueId", checkAuth, antrianCtrl.antrianDetail);
 router.get("/user/:userId", checkAuth, antrianCtrl.antrianUser);
+router.put("/rekammedis/:userId", checkAuth, antrianCtrl.rekamMedisEdit);
 router.delete("/list/:queueId", checkAuth, antrianCtrl.antrianDelete);
 
 module.exports = router;

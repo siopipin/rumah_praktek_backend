@@ -13,10 +13,19 @@ exports.jadwal = async (req, res, next) => {
         data: {},
       });
     } else {
+      let dataJadwal = [];
+      for (let item of rows) {
+        let resutlFilled = await db.query(
+          `SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId =  ${item.id}`
+        );
+        dataJadwal.push({ ...item, filled: resutlFilled[0].filled });
+      }
+
+      console.log("finish");
       return res.status(200).json({
         status: 200,
         message: "all jadwal",
-        data: rows,
+        data: dataJadwal,
       });
     }
   } catch (error) {
