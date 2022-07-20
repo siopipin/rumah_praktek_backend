@@ -8,6 +8,7 @@ router.get("/", checkAuth, antrianCtrl.antrian);
 router.get("/all", checkAuth, antrianCtrl.antrianAll);
 router.post("/", checkAuth, antrianCtrl.antrianAdd);
 router.put("/list/:queueId", checkAuth, antrianCtrl.antrianEdit);
+router.put("/estimasi/:queueId", checkAuth, antrianCtrl.antrianEstimasi);
 router.get("/list/:queueId", checkAuth, antrianCtrl.antrianDetail);
 router.get("/user/:userId", checkAuth, antrianCtrl.antrianUser);
 router.put("/rekammedis/:userId", checkAuth, antrianCtrl.rekamMedisEdit);

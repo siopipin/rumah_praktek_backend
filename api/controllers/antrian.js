@@ -159,6 +159,33 @@ exports.antrianEdit = async (req, res, next) => {
 };
 
 //Edit antrian
+exports.antrianEstimasi = async (req, res, next) => {
+  const id = req.params.queueId;
+  const data = req.body;
+  try {
+    const rows = await db.query(
+      `update tbl_antrian set estimasi = ${data.estimasi} WHERE id = ${id}`
+    );
+    if (rows.affectedRows) {
+      return res.status(200).json({
+        status: 200,
+        message: "estimasi queue updated",
+        data: {},
+      });
+    } else {
+      return res.status(404).json({
+        status: 404,
+        message: "estimasi queue not updated",
+        data: {},
+      });
+    }
+  } catch (error) {
+    console.error(`Error while update estimasi queue`, error.message);
+    next(error);
+  }
+};
+
+//Edit antrian
 exports.rekamMedisEdit = async (req, res, next) => {
   const id = req.params.userId;
   const data = req.body;
