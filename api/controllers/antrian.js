@@ -68,17 +68,15 @@ exports.antrianAdd = async (req, res, next) => {
     );
 
     if (cekAntrian[0].filled < cekQuota[0].quota) {
-      var dateObj = new Date();
-      var month = dateObj.getUTCMonth() + 1;
-      var day = dateObj.getUTCDate();
-
       const resultSetting = await db.query(
         `select queuePrefix from tbl_setting`
       );
 
-      var kode = `${resultSetting[0].queuePrefix}${month}${day}_ID0${
+      var kode = `${resultSetting[0].queuePrefix}${data.scheduleId}_ID0${
         cekAntrian[0].filled + 1
       }`;
+
+      console.log(`kode: ${kode}`);
 
       console.log("status rekam medis : " + data.medicalRecordsNumber);
 
@@ -93,6 +91,8 @@ exports.antrianAdd = async (req, res, next) => {
       const resultAntrianCek = await db.query(
         `SELECT code from tbl_antrian WHERE code = "${kode}"`
       );
+
+      console.log(resultAntrianCek);
 
       if (resultAntrianCek.length < 1) {
         const result = await db.query(
@@ -158,7 +158,7 @@ exports.antrianEdit = async (req, res, next) => {
   }
 };
 
-//Edit antrian
+//Edit estimasi
 exports.antrianEstimasi = async (req, res, next) => {
   const id = req.params.queueId;
   const data = req.body;
