@@ -57,28 +57,31 @@ exports.antrianAdd = async (req, res, next) => {
   var data = req.body;
   try {
     //Jika filled antrian < quota harian.
-
     console.log("Schedule ID: " + req.body.scheduleId);
     let cekAntrian = await db.query(
-      `SELECT COUNT(tbl_antrian.id) as filled FROM tbl_antrian WHERE jadwalId = "${req.body.scheduleId}"`
+      `SELECT COUNT(tbl_antrian.id) as filled, (SELECT quota FROM tbl_jadwal WHERE id = ${data.scheduleId}) as quota, (SELECT code FROM tbl_antrian where jadwalId = ${data.scheduleId} ORDER BY id DESC LIMIT 1) as lastQueue FROM tbl_antrian WHERE jadwalId = ${data.scheduleId}`
     );
 
-    let cekQuota = await db.query(
-      `SELECT quota FROM tbl_jadwal WHERE id = "${req.body.scheduleId}"`
-    );
+    console.log({ cekAntrian });
 
-    if (cekAntrian[0].filled < cekQuota[0].quota) {
+    if (cekAntrian[0].filled < cekAntrian[0].quota) {
       const resultSetting = await db.query(
         `select queuePrefix from tbl_setting`
       );
 
+      //Hitung
+      var lastQueue;
+      if (cekAntrian[0].lastQueue === null) {
+        lastQueue = 0;
+      } else {
+        lastQueue = cekAntrian[0].lastQueue.substring(
+          cekAntrian[0].lastQueue.indexOf("ID0") + 3
+        );
+      }
+
       var kode = `${resultSetting[0].queuePrefix}${data.scheduleId}_ID0${
-        cekAntrian[0].filled + 1
+        parseInt(lastQueue) + 1
       }`;
-
-      console.log(`kode: ${kode}`);
-
-      console.log("status rekam medis : " + data.medicalRecordsNumber);
 
       if (data.medicalRecordsNumber) {
         console.log("akan simpan no.rek medis: " + data.medicalRecordsNumber);

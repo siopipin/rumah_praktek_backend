@@ -22,6 +22,7 @@ const config = {
     database: process.env.DATABASE || "db_rumahpraktek",
     waitForConnections: true,
     connectionLimit: 99,
+    queueLimit: 0,
     debug: false,
   },
 };
