@@ -6,8 +6,8 @@ const checkAuth = require("../middleware/check-auth");
 
 router.get("/", checkAuth, jadwalCtrl.jadwal);
 router.post("/", checkAuth, jadwalCtrl.jadwalAdd);
+router.delete("/delete/:scheduleId", checkAuth, jadwalCtrl.jadwalDelete);
 router.get("/detail/:scheduleId", checkAuth, jadwalCtrl.jadwalDetail);
 router.put("/detail/:scheduleId", checkAuth, jadwalCtrl.jadwalEdit);
 router.get("/todays", jadwalCtrl.jadwalHariIni);
-
 module.exports = router;

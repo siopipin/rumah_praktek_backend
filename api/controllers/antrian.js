@@ -118,8 +118,8 @@ exports.antrianAdd = async (req, res, next) => {
             .json({ status: false, message: "add antrian failed", data: {} });
         }
       } else {
-        res.status(400).json({
-          status: 400,
+        res.status(402).json({
+          status: 402,
           message: "Kode Antrian telah diambil, ulangi lagi",
           data: {},
         });
@@ -268,7 +268,7 @@ exports.antrianDetail = async (req, res, next) => {
   }
 };
 
-//Edit Service
+//Delete antrian
 exports.antrianDelete = async (req, res, next) => {
   const id = req.params.queueId;
   try {
@@ -276,13 +276,13 @@ exports.antrianDelete = async (req, res, next) => {
     if (rows.affectedRows) {
       return res.status(200).json({
         status: 200,
-        message: "queue canceled",
+        message: "queue deleted",
         data: {},
       });
     } else {
       return res.status(404).json({
         status: 404,
-        message: "antrian not deleted",
+        message: "queue not deleted",
         data: {},
       });
     }

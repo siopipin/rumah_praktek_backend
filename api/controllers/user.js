@@ -143,6 +143,7 @@ exports.usersHistoryAdd = async (req, res, next) => {
     const result = await db.query(
       `INSERT INTO tbl_history_medis (userId, serviceId, description) VALUES (${req.params.userId}, ${data.serviceId}, "${data.description}")`
     );
+
     const result1 = await db.query(
       `update tbl_antrian set duration = ${data.duration} WHERE id = ${data.id}`
     );
@@ -187,6 +188,30 @@ exports.usersHistoryAdd = async (req, res, next) => {
     }
   } catch (error) {
     console.error(`Error while add schedules`, error.message);
+    next(error);
+  }
+};
+
+//Delete users
+exports.usersDelete = async (req, res, next) => {
+  const id = req.params.userId;
+  try {
+    const rows = await db.query(`delete from tbl_users where id = ${id}`);
+    if (rows.affectedRows) {
+      return res.status(200).json({
+        status: 200,
+        message: "user deleted",
+        data: {},
+      });
+    } else {
+      return res.status(404).json({
+        status: 404,
+        message: "user not deleted",
+        data: {},
+      });
+    }
+  } catch (error) {
+    console.error(`Error while delete user`, error.message);
     next(error);
   }
 };

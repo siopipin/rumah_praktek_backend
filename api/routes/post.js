@@ -1,8 +1,9 @@
 const express = require("express");
-const multer = require("multer");
 const router = express.Router();
 const variables = require("../../variables");
-const userCtrl = require("../controllers/user");
+const multer = require("multer");
+
+const postCtrl = require("../controllers/post");
 const checkAuth = require("../middleware/check-auth");
 
 var storageFileName = multer.diskStorage({
@@ -13,19 +14,19 @@ var storageFileName = multer.diskStorage({
     cb(null, Date.now() + file.originalname);
   },
 });
-
 let uploadImg = multer({ storage: storageFileName });
 
-router.get("/", checkAuth, userCtrl.users);
-router.get("/:userId", checkAuth, userCtrl.usersDetail);
-router.delete("/:userId", checkAuth, userCtrl.usersDelete);
+router.get("/", postCtrl.posts);
+router.get("/all", postCtrl.postsAll);
+router.post("/", checkAuth, uploadImg.single("images"), postCtrl.postAdd);
+router.get("/detail/:postId", postCtrl.postDetail);
 router.put(
-  "/:userId",
+  "/detail/:postId",
   checkAuth,
   uploadImg.single("images"),
-  userCtrl.userEdit
+  postCtrl.postEdit
 );
-router.get("/:userId/history", checkAuth, userCtrl.usersHistory);
-router.post("/:userId/history", checkAuth, userCtrl.usersHistoryAdd);
-//
+
+router.delete("/detail/:postId", checkAuth, postCtrl.postDelete);
+
 module.exports = router;

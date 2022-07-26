@@ -161,3 +161,27 @@ exports.jadwalEdit = async (req, res, next) => {
     next(error);
   }
 };
+
+//Delete users
+exports.jadwalDelete = async (req, res, next) => {
+  const id = req.params.scheduleId;
+  try {
+    const rows = await db.query(`delete from tbl_jadwal where id = ${id}`);
+    if (rows.affectedRows) {
+      return res.status(200).json({
+        status: 200,
+        message: "jadwal deleted",
+        data: {},
+      });
+    } else {
+      return res.status(404).json({
+        status: 404,
+        message: "jadwal not deleted",
+        data: {},
+      });
+    }
+  } catch (error) {
+    console.error(`Error while delete jadwal`, error.message);
+    next(error);
+  }
+};

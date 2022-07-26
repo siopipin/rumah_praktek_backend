@@ -6,10 +6,12 @@ const servicesRoutes = require("./routes/service");
 const settingsRoutes = require("./routes/setting");
 const antrianRoutes = require("./routes/antrian");
 const schedulesRoutes = require("./routes/jadwal");
+const postRoutes = require("./routes/post");
 
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/services", servicesRoutes);
+router.use("/posts", postRoutes);
 router.use("/settings", settingsRoutes);
 router.use("/queues", antrianRoutes);
 router.use("/schedules", schedulesRoutes);
