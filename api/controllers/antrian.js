@@ -65,9 +65,7 @@ exports.antrianAdd = async (req, res, next) => {
     console.log({ cekAntrian });
 
     if (cekAntrian[0].filled < cekAntrian[0].quota) {
-      const resultSetting = await db.query(
-        `select queuePrefix from tbl_setting`
-      );
+      const resultSetting = await db.query(`select * from tbl_setting`);
 
       //Hitung
       var lastQueue;
@@ -99,10 +97,15 @@ exports.antrianAdd = async (req, res, next) => {
 
       if (resultAntrianCek.length < 1) {
         const result = await db.query(
-          `INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code) VALUES (${data.serviceId}, ${data.userId}, ${data.scheduleId}, "${data.name}", ${data.phoneNumber}, "${data.email}", "${data.husbandName}", "${data.address}", "${data.birth}", "${kode}")`
+          `INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code, estimasi) VALUES (${data.serviceId}, ${data.userId}, ${data.scheduleId}, "${data.name}", "${data.phoneNumber}", "${data.email}", "${data.husbandName}", "${data.address}", "${data.birth}", "${kode}", ${resultSetting[0].estimasi})`
         );
 
         if (result.affectedRows) {
+          await db.query(
+            `update tbl_users set name = "${data.name}",  phoneNumber = "${data.phoneNumber}", email = "${data.email}", birth = "${data.birth}", husbandName= "${data.husbandName}", address= "${data.address}"
+            WHERE id = ${data.userId}`
+          );
+
           const resultAntrian = await db.query(
             `SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_jadwal.date, tbl_service.name FROM tbl_antrian JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = "${kode}"`
           );

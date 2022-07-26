@@ -68,7 +68,7 @@ exports.userEdit = async (req, res, next) => {
 
     if (!req.file) {
       const rows = await db.query(
-        `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = ${data.phoneNumber}, email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}", medicalRecordsNumber = "${data.medicalRecordsNumber}"
+        `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = "${data.phoneNumber}", email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}", medicalRecordsNumber = "${data.medicalRecordsNumber}"
         WHERE id = ${id}`
       );
       if (rows.affectedRows) {
@@ -87,7 +87,7 @@ exports.userEdit = async (req, res, next) => {
     } else {
       //Ada file
       const rows = await db.query(
-        `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = ${data.phoneNumber}, email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}", medicalRecordsNumber = "${data.medicalRecordsNumber}", img = "${req.file.filename}" WHERE id = ${id}`
+        `update tbl_users set name = "${data.name}", role = ${data.role}, phoneNumber = "${data.phoneNumber}", email = "${data.email}", birth = "${tglLahir}", husbandName= "${data.husbandName}", address= "${data.address}", medicalRecordsNumber = "${data.medicalRecordsNumber}", img = "${req.file.filename}" WHERE id = ${id}`
       );
       if (rows.affectedRows) {
         return res.status(200).json({
