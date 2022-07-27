@@ -5,7 +5,7 @@ const helper = require("../../helper");
 exports.antrian = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT tbl_antrian.id, tbl_antrian.code, tbl_users.id as userId, tbl_users.name, tbl_users.phoneNumber, tbl_users.email, tbl_users.medicalRecordsNumber, tbl_service.name as service, tbl_antrian.status, tbl_jadwal.date, tbl_jadwal.isActive, tbl_jadwal.message, tbl_service.id as serviceId FROM tbl_antrian LEFT JOIN tbl_jadwal on tbl_antrian.jadwalId = tbl_jadwal.id LEFT JOIN tbl_service on tbl_antrian.serviceId = tbl_service.id LEFT JOIN tbl_users on tbl_antrian.userId = tbl_users.id WHERE tbl_jadwal.isActive = 1 ORDER BY tbl_antrian.date_created DESC"
+      "SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_users.id as userId, tbl_users.name, tbl_users.phoneNumber, tbl_users.email, tbl_users.medicalRecordsNumber, tbl_service.name as service, tbl_antrian.status, tbl_jadwal.date, tbl_jadwal.isActive, tbl_jadwal.message, tbl_service.id as serviceId FROM tbl_antrian LEFT JOIN tbl_jadwal on tbl_antrian.jadwalId = tbl_jadwal.id LEFT JOIN tbl_service on tbl_antrian.serviceId = tbl_service.id LEFT JOIN tbl_users on tbl_antrian.userId = tbl_users.id WHERE tbl_jadwal.isActive = 1 ORDER BY tbl_antrian.date_created DESC"
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
@@ -30,7 +30,7 @@ exports.antrian = async (req, res, next) => {
 exports.antrianAll = async (req, res, next) => {
   try {
     const result = await db.query(
-      "SELECT tbl_antrian.id, tbl_antrian.code, tbl_users.id as userId, tbl_users.name, tbl_users.medicalRecordsNumber, tbl_users.phoneNumber, tbl_users.email, tbl_service.name as service, tbl_antrian.status, tbl_antrian.estimasi, tbl_jadwal.date, tbl_jadwal.isActive, tbl_jadwal.message, tbl_service.id as serviceId FROM tbl_antrian LEFT JOIN tbl_jadwal on tbl_antrian.jadwalId = tbl_jadwal.id LEFT JOIN tbl_service on tbl_antrian.serviceId = tbl_service.id LEFT JOIN tbl_users on tbl_antrian.userId = tbl_users.id ORDER BY tbl_antrian.date_created DESC"
+      "SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_users.id as userId, tbl_users.name, tbl_users.medicalRecordsNumber, tbl_users.phoneNumber, tbl_users.email, tbl_service.name as service, tbl_antrian.status, tbl_antrian.estimasi, tbl_jadwal.date, tbl_jadwal.isActive, tbl_jadwal.message, tbl_service.id as serviceId FROM tbl_antrian LEFT JOIN tbl_jadwal on tbl_antrian.jadwalId = tbl_jadwal.id LEFT JOIN tbl_service on tbl_antrian.serviceId = tbl_service.id LEFT JOIN tbl_users on tbl_antrian.userId = tbl_users.id ORDER BY tbl_antrian.date_created DESC"
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
@@ -55,15 +55,15 @@ exports.antrianAll = async (req, res, next) => {
 //Add antrian
 exports.antrianAdd = async (req, res, next) => {
   var data = req.body;
+
   try {
     //Jika filled antrian < quota harian.
     console.log("Schedule ID: " + req.body.scheduleId);
     let cekAntrian = await db.query(
-      `SELECT COUNT(tbl_antrian.id) as filled, (SELECT quota FROM tbl_jadwal WHERE id = ${data.scheduleId}) as quota, (SELECT code FROM tbl_antrian where jadwalId = ${data.scheduleId} ORDER BY id DESC LIMIT 1) as lastQueue FROM tbl_antrian WHERE jadwalId = ${data.scheduleId}`
+      `SELECT COUNT(tbl_antrian.id) as filled, (SELECT quota FROM tbl_jadwal WHERE id = ${data.scheduleId}) as quota, (SELECT open FROM tbl_jadwal WHERE id = ${data.scheduleId}) as waktuMulai, (SELECT code FROM tbl_antrian where jadwalId = ${data.scheduleId} ORDER BY id DESC LIMIT 1) as lastQueue FROM tbl_antrian WHERE jadwalId = ${data.scheduleId}`
     );
 
-    console.log({ cekAntrian });
-
+    // Jika antrian belum penuh
     if (cekAntrian[0].filled < cekAntrian[0].quota) {
       const resultSetting = await db.query(`select * from tbl_setting`);
 
@@ -81,8 +81,8 @@ exports.antrianAdd = async (req, res, next) => {
         parseInt(lastQueue) + 1
       }`;
 
+      //simpan nomor rekam medis jika ada
       if (data.medicalRecordsNumber) {
-        console.log("akan simpan no.rek medis: " + data.medicalRecordsNumber);
         await db.query(
           `update tbl_users set medicalRecordsNumber = "${data.medicalRecordsNumber}" WHERE id = ${data.userId}`
         );
@@ -93,11 +93,45 @@ exports.antrianAdd = async (req, res, next) => {
         `SELECT code from tbl_antrian WHERE code = "${kode}"`
       );
 
-      console.log(resultAntrianCek);
-
+      //Jika tidak ada nomor antrian yang sama.
       if (resultAntrianCek.length < 1) {
+        //buat estimasi masuk
+        let tempTime;
+        if (cekAntrian[0].filled === 0) {
+          tempTime = parseInt(00);
+        } else {
+          tempTime =
+            parseInt(cekAntrian[0].filled) *
+            parseInt(resultSetting[0].estimasi);
+        }
+
+        var inTime = `00:${tempTime}`;
+
+        var waktuMulai = cekAntrian[0].waktuMulai;
+
+        function toSeconds(s) {
+          var p = s.split(":");
+          return parseInt(p[0], 10) * 3600 + parseInt(p[1], 10) * 60;
+        }
+
+        function fill(s, digits) {
+          s = s.toString();
+          while (s.length < digits) s = "0" + s;
+          return s;
+        }
+
+        var sec = toSeconds(inTime) + toSeconds(waktuMulai);
+
+        var estimasiWaktu =
+          fill(Math.floor(sec / 3600), 2) +
+          ":" +
+          fill(Math.floor(sec / 60) % 60, 2);
+
+        console.log(estimasiWaktu);
+
+        //Simpan antrian
         const result = await db.query(
-          `INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code, estimasi) VALUES (${data.serviceId}, ${data.userId}, ${data.scheduleId}, "${data.name}", "${data.phoneNumber}", "${data.email}", "${data.husbandName}", "${data.address}", "${data.birth}", "${kode}", ${resultSetting[0].estimasi})`
+          `INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code, estimasi, estimasiJam) VALUES (${data.serviceId}, ${data.userId}, ${data.scheduleId}, "${data.name}", "${data.phoneNumber}", "${data.email}", "${data.husbandName}", "${data.address}", "${data.birth}", "${kode}", ${resultSetting[0].estimasi}, "${estimasiWaktu}")`
         );
 
         if (result.affectedRows) {
@@ -121,6 +155,7 @@ exports.antrianAdd = async (req, res, next) => {
             .json({ status: false, message: "add antrian failed", data: {} });
         }
       } else {
+        //jika  ada nomor antrian
         res.status(402).json({
           status: 402,
           message: "Kode Antrian telah diambil, ulangi lagi",
@@ -128,7 +163,7 @@ exports.antrianAdd = async (req, res, next) => {
         });
       }
     } else {
-      //penuh
+      // antrian penuh
       res.status(400).json({ status: 400, message: "Antrian Penuh", data: {} });
     }
   } catch (error) {
@@ -222,7 +257,7 @@ exports.rekamMedisEdit = async (req, res, next) => {
 exports.antrianUser = async (req, res, next) => {
   try {
     const result = await db.query(
-      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.status, tbl_service.name, tbl_jadwal.open, tbl_jadwal.close, tbl_antrian.estimasi, tbl_jadwal.date, tbl_jadwal.message, tbl_jadwal.isActive FROM tbl_antrian LEFT JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId LEFT JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.userId = ${req.params.userId}`
+      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_antrian.status, tbl_service.name, tbl_jadwal.open, tbl_jadwal.close, tbl_antrian.estimasi, tbl_jadwal.date, tbl_jadwal.message, tbl_jadwal.isActive FROM tbl_antrian LEFT JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId LEFT JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.userId = ${req.params.userId}`
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
@@ -249,7 +284,7 @@ exports.antrianDetail = async (req, res, next) => {
   const id = req.params.queueId;
   try {
     const result = await db.query(
-      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.status, tbl_users.name, tbl_users.phoneNumber, tbl_service.name as services, tbl_antrian.status, tbl_jadwal.date, tbl_antrian.husbandName, tbl_antrian.address, tbl_antrian.estimasi, tbl_antrian.birth FROM tbl_antrian JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.id = ${id}`
+      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_antrian.status, tbl_users.name, tbl_users.phoneNumber, tbl_service.name as services, tbl_antrian.status, tbl_jadwal.date, tbl_antrian.husbandName, tbl_antrian.address, tbl_antrian.estimasi, tbl_antrian.birth FROM tbl_antrian JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.id = ${id}`
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
