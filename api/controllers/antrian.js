@@ -257,7 +257,7 @@ exports.rekamMedisEdit = async (req, res, next) => {
 exports.antrianUser = async (req, res, next) => {
   try {
     const result = await db.query(
-      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_antrian.status, tbl_service.name, tbl_jadwal.open, tbl_jadwal.close, tbl_antrian.estimasi, tbl_jadwal.date, tbl_jadwal.message, tbl_jadwal.isActive FROM tbl_antrian LEFT JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId LEFT JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.userId = ${req.params.userId}`
+      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_antrian.status, tbl_service.name, tbl_jadwal.id as jadwalId, tbl_jadwal.open, tbl_jadwal.close, tbl_antrian.estimasi, tbl_jadwal.date, tbl_jadwal.message, tbl_jadwal.isActive FROM tbl_antrian LEFT JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId LEFT JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.userId = ${req.params.userId}`
     );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
@@ -267,10 +267,37 @@ exports.antrianUser = async (req, res, next) => {
         data: {},
       });
     } else {
+      let dataAntrian = [];
+      for (let item of rows) {
+        //ambil semua data antrian
+        let semuaAntrianDariJadwal = await db.query(
+          `SELECT code, status FROM tbl_antrian WHERE jadwalId = ${item.jadwalId}`
+        );
+        //looping dan temukan kode antrian, lihat urutan indexnya
+        let selesai = 0;
+        let tunda = 0;
+        let urutan = semuaAntrianDariJadwal.findIndex(function (item) {
+          if (item.status === 4) selesai += 1;
+          if (item.status === 2) tunda += 1;
+          return item.code === rows[0].code;
+        });
+
+        console.log(selesai);
+        console.log(tunda);
+        console.log(urutan);
+
+        let tempAntrian =
+          parseInt(urutan) - parseInt(selesai) - parseInt(tunda);
+
+        console.log(`antriandidepan: ${tempAntrian}`);
+
+        dataAntrian.push({ ...item, queueBeforeYou: tempAntrian });
+      }
+
       return res.status(200).json({
         status: 200,
         message: "all antrian",
-        data: rows,
+        data: dataAntrian,
       });
     }
   } catch (error) {
