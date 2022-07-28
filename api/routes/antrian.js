@@ -6,6 +6,7 @@ const checkAuth = require("../middleware/check-auth");
 
 router.get("/", checkAuth, antrianCtrl.antrian);
 router.get("/all", checkAuth, antrianCtrl.antrianAll);
+router.get("/filter/:scheduleId", checkAuth, antrianCtrl.antrianFilter);
 router.post("/", checkAuth, antrianCtrl.antrianAdd);
 router.put("/list/:queueId", checkAuth, antrianCtrl.antrianEdit);
 router.put("/estimasi/:queueId", checkAuth, antrianCtrl.antrianEstimasi);

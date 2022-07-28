@@ -52,6 +52,33 @@ exports.antrianAll = async (req, res, next) => {
   }
 };
 
+//filter antrian
+exports.antrianFilter = async (req, res, next) => {
+  const scheduleId = req.params.scheduleId;
+  try {
+    const result = await db.query(
+      `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_users.id as userId, tbl_users.name, tbl_users.phoneNumber, tbl_users.email, tbl_users.medicalRecordsNumber, tbl_service.name as service, tbl_antrian.status, tbl_jadwal.date, tbl_jadwal.isActive, tbl_jadwal.message, tbl_service.id as serviceId FROM tbl_antrian LEFT JOIN tbl_jadwal on tbl_antrian.jadwalId = tbl_jadwal.id LEFT JOIN tbl_service on tbl_antrian.serviceId = tbl_service.id LEFT JOIN tbl_users on tbl_antrian.userId = tbl_users.id WHERE tbl_jadwal.id = ${scheduleId} ORDER BY tbl_antrian.date_created DESC`
+    );
+    const rows = helper.emptyOrRows(result);
+    if (rows.length < 1) {
+      return res.status(404).json({
+        status: 404,
+        message: "antrian not found",
+        data: {},
+      });
+    } else {
+      return res.status(200).json({
+        status: 200,
+        message: "all antrian",
+        data: rows,
+      });
+    }
+  } catch (error) {
+    console.error(`Error while get list antrian`, error.message);
+    next(error);
+  }
+};
+
 //Add antrian
 exports.antrianAdd = async (req, res, next) => {
   var data = req.body;
