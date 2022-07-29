@@ -286,27 +286,26 @@ exports.antrianUser = async (req, res, next) => {
     const result = await db.query(
       `SELECT tbl_antrian.id, tbl_antrian.code, tbl_antrian.estimasiJam, tbl_antrian.status, tbl_service.name, tbl_jadwal.id as jadwalId, tbl_jadwal.open, tbl_jadwal.close, tbl_antrian.estimasi, tbl_jadwal.date, tbl_jadwal.message, tbl_jadwal.isActive FROM tbl_antrian LEFT JOIN tbl_service on tbl_service.id = tbl_antrian.serviceId LEFT JOIN tbl_jadwal on tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_users on tbl_users.id = tbl_antrian.userId WHERE tbl_antrian.userId = ${req.params.userId}`
     );
-    const rows = helper.emptyOrRows(result);
-    if (rows.length < 1) {
+
+    if (result.length < 1) {
       return res.status(404).json({
         status: 404,
         message: "antrian not found",
         data: {},
       });
     } else {
+      console.log(`data row: ${result}`);
       let dataAntrian = [];
-      for (let item of rows) {
-        //ambil semua data antrian
+      for (let [i, item] of result.entries()) {
         let semuaAntrianDariJadwal = await db.query(
           `SELECT code, status FROM tbl_antrian WHERE jadwalId = ${item.jadwalId}`
         );
-        //looping dan temukan kode antrian, lihat urutan indexnya
         let selesai = 0;
         let tunda = 0;
         let urutan = semuaAntrianDariJadwal.findIndex(function (item) {
           if (item.status === 4) selesai += 1;
           if (item.status === 2) tunda += 1;
-          return item.code === rows[0].code;
+          return item.code === result[i].code;
         });
 
         console.log(selesai);
