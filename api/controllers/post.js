@@ -86,7 +86,8 @@ exports.postAdd = async (req, res, next) => {
 
     if (!req.file) {
       const result = await db.query(
-        `INSERT INTO tbl_post (title, description) VALUES ("${data.title}", "${data.description}"`
+        "INSERT INTO tbl_post (title, description) VALUES (?, ?)",
+        [data.title, data.description]
       );
       if (result.affectedRows) {
         res.status(200).json({
@@ -131,7 +132,8 @@ exports.postEdit = async (req, res, next) => {
     //Cek jika tidak ada file foto
     if (!req.file) {
       const result = await db.query(
-        `update tbl_post set title = "${data.title}", description = "${data.description}" WHERE id = ${id}`
+        "update tbl_post set title = ?, description = ? WHERE id = ?",
+        [data.title, data.description, id]
       );
       if (result.affectedRows) {
         res.status(200).json({
@@ -146,7 +148,8 @@ exports.postEdit = async (req, res, next) => {
       }
     } else {
       const result = await db.query(
-        `update tbl_post set title = "${data.title}", description = "${data.description}", img = "${req.file.filename}" WHERE id = ${id}`
+        "update tbl_post set title = ?, description = ?, img = ? WHERE id = ?",
+        [data.title, data.description, req.file.filename, id]
       );
       if (result.affectedRows) {
         res.status(200).json({
