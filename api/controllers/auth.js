@@ -150,7 +150,8 @@ exports.reset = async (req, res, next) => {
           console.log("pswd " + data.password);
 
           const resultUpdate = await db.query(
-            `update tbl_users set password = "${data.password}" WHERE phoneNumber = ${data.phoneNumber}`
+            "update tbl_users set password = ? WHERE phoneNumber = ?",
+            [data.password, data.phoneNumber]
           );
           console.log(resultUpdate.affectedRows);
           if (resultUpdate.affectedRows) {
