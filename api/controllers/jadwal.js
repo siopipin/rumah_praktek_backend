@@ -4,7 +4,9 @@ const helper = require("../../helper");
 //List jadwal
 exports.jadwal = async (req, res, next) => {
   try {
-    const result = await db.query("SELECT * FROM tbl_jadwal ORDER BY date ASC");
+    const result = await db.query(
+      "SELECT * FROM tbl_jadwal ORDER BY date DESC"
+    );
     const rows = helper.emptyOrRows(result);
     if (rows.length < 1) {
       return res.status(404).json({
@@ -16,7 +18,8 @@ exports.jadwal = async (req, res, next) => {
       let dataJadwal = [];
       for (let item of rows) {
         let resutlFilled = await db.query(
-          `SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId =  ${item.id}`
+          "SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId = ? AND status = 0",
+          [item.id]
         );
         dataJadwal.push({ ...item, filled: resutlFilled[0].filled });
       }
