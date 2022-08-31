@@ -18,7 +18,7 @@ exports.jadwal = async (req, res, next) => {
       let dataJadwal = [];
       for (let item of rows) {
         let resutlFilled = await db.query(
-          "SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId = ? AND status = 0",
+          "SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId = ?",
           [item.id]
         );
         dataJadwal.push({ ...item, filled: resutlFilled[0].filled });
