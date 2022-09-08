@@ -136,7 +136,7 @@ exports.antrianAdd = async (req, res, next) => {
         }`;
 
         //Buat random waktu agar tidak ada yang bersamaan dapat nomor antrian
-        var rnd = Math.floor(Math.random() * 4200);
+        var rnd = Math.floor(Math.random() * (4300 - 986 + 1)) + 986;
         console.log(`random nilai: ${rnd}`);
         await sleep(rnd);
         function sleep(ms) {
