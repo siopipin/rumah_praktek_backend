@@ -81,7 +81,7 @@ exports.antrianFilter = async (req, res, next) => {
 };
 
 //Add antrian
-exports.antrianAdd = async (req, res, next) => {
+exports.antrianAddV1 = async (req, res, next) => {
   var data = req.body;
 
   try {
@@ -246,6 +246,181 @@ exports.antrianAdd = async (req, res, next) => {
           .status(400)
           .json({ status: 400, message: "Antrian Penuh", data: {} });
       }
+    }
+  } catch (error) {
+    console.error(`Error while add antrian`, error.message);
+    next(error);
+  }
+};
+
+exports.antrianAdd = async (req, res, next) => {
+  var data = req.body;
+
+  try {
+    //Cek apakah antrian full?
+    let cekAntrian = await db.query(
+      "SELECT COUNT(tbl_antrian.id) as filled, (SELECT quota FROM tbl_jadwal WHERE id = ?) as quota FROM tbl_antrian WHERE jadwalId = ? AND status = 0",
+      [data.scheduleId, data.scheduleId]
+    );
+
+    //Cek jika sudah selesai batas waktu
+    let queryTblJadwal = await db.query("SELECT * FROM tbl_jadwal WHERE id=?", [
+      data.scheduleId,
+    ]);
+
+    var nowTime = new Date();
+    let closeTime = new Date(queryTblJadwal[0].date);
+    let closetimeString = `${closeTime.getFullYear()}-${
+      closeTime.getMonth() + 1
+    }-${closeTime.getDate()} ${queryTblJadwal[0].open}:00`;
+    let closeTimeOnDate = new Date(closetimeString);
+
+    console.log(`close time string: ${closetimeString}`);
+    console.log(`waktu sekarang: ${nowTime}`);
+    console.log(`waktu tutup: ${closeTimeOnDate}`);
+
+    // Jika antrian belum penuh
+    if (
+      cekAntrian[0].filled < cekAntrian[0].quota &&
+      nowTime < closeTimeOnDate
+    ) {
+      let resultSetting = await db.query("select * from tbl_setting");
+      let queryLastQueue = await db.query(
+        "SELECT code as queueNumber FROM tbl_antrian where jadwalId = ? ORDER BY id DESC LIMIT 1",
+        [data.scheduleId]
+      );
+
+      //Hitung
+      let lastQueue;
+      if (queryLastQueue.length === 0) {
+        lastQueue = 0;
+      } else {
+        lastQueue = queryLastQueue[0].queueNumber.substring(
+          queryLastQueue[0].queueNumber.indexOf("ID0") + 3
+        );
+      }
+
+      var kode = `${resultSetting[0].queuePrefix}${data.scheduleId}-ID0${
+        parseInt(lastQueue) + 1
+      }`;
+
+      console.log(`kode: ${kode}`);
+
+      //cek jika ada nomor antrian yang sama
+      const resultAntrianCek = await db.query(
+        "SELECT code from tbl_antrian WHERE code = ? AND jadwalId = ?",
+        [kode, data.scheduleId]
+      );
+
+      console.log(`resultAntrianCek:${resultAntrianCek}`);
+
+      if (resultAntrianCek.length !== 0) {
+        //jika  ada nomor antrian
+        res.status(402).json({
+          status: 402,
+          message: "Kode Antrian telah diambil, ulangi lagi",
+          data: {},
+        });
+      } else {
+        //buat estimasi masuk
+        let tempTime = 00;
+        if (cekAntrian[0].filled === 0) {
+          tempTime = parseInt(00);
+        } else {
+          tempTime =
+            parseInt(cekAntrian[0].filled) *
+            parseInt(resultSetting[0].estimasi);
+        }
+
+        let inTime = `00:${tempTime}`;
+
+        console.log(`inTime: ${inTime}`);
+
+        let waktuMulai = queryTblJadwal[0].open;
+
+        function toSeconds(s) {
+          let p = s.split(":");
+          return parseInt(p[0], 10) * 3600 + parseInt(p[1], 10) * 60;
+        }
+
+        function fill(s, digits) {
+          s = s.toString();
+          while (s.length < digits) s = "0" + s;
+          return s;
+        }
+
+        let sec = toSeconds(inTime) + toSeconds(waktuMulai);
+
+        let estimasiWaktu =
+          fill(Math.floor(sec / 3600), 2) +
+          ":" +
+          fill(Math.floor(sec / 60) % 60, 2);
+
+        console.log(estimasiWaktu);
+
+        //Simpan antrian
+        const result = await db.query(
+          "INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code, estimasi, estimasiJam) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [
+            data.serviceId,
+            data.userId,
+            data.scheduleId,
+            data.name,
+            data.phoneNumber,
+            data.email,
+            data.husbandName,
+            data.address,
+            data.birth,
+            kode,
+            resultSetting[0].estimasi,
+            estimasiWaktu,
+          ]
+        );
+
+        if (result.affectedRows) {
+          console.log(`data: ${data}`);
+          await db.query(
+            "update tbl_users set name = ?, phoneNumber = ?, email = ?, birth = ?, husbandName= ?, address= ? WHERE id = ?",
+            [
+              data.name,
+              data.phoneNumber,
+              data.email,
+              data.birth,
+              data.husbandName,
+              data.address,
+              data.userId,
+            ]
+          );
+
+          //simpan nomor rekam medis jika ada
+          if (data.medicalRecordsNumber) {
+            await db.query(
+              "update tbl_users set medicalRecordsNumber = ? WHERE id = ?",
+              [data.medicalRecordsNumber, data.userId]
+            );
+          }
+
+          const resultAntrian = await db.query(
+            "SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_antrian.estimasiJam, tbl_jadwal.date, tbl_service.name FROM tbl_antrian LEFT JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = ?",
+            [kode]
+          );
+
+          res.status(201).json({
+            status: 201,
+            message: "antrian created",
+            data: resultAntrian[0],
+          });
+        } else {
+          res
+            .status(404)
+            .json({ status: false, message: "add antrian failed", data: {} });
+        }
+      }
+    } else {
+      // antrian penuh
+      res
+        .status(400)
+        .json({ status: 400, message: "Antrian Penuh, coba lagi!", data: {} });
     }
   } catch (error) {
     console.error(`Error while add antrian`, error.message);
