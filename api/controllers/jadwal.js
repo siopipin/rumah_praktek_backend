@@ -85,7 +85,7 @@ exports.jadwalHariIni = async (req, res, next) => {
       });
     } else {
       const resutlTTL = await db.query(
-        `SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId =  ${rows[0].id}`
+        `SELECT COUNT(id) as filled FROM tbl_antrian WHERE jadwalId =  ${rows[0].id} and status != 2`
       );
       rows[0]["filled"] = resutlTTL[0].filled;
       return res.status(200).json({
