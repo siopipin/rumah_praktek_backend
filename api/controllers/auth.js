@@ -72,9 +72,23 @@ exports.login = async (req, res, next) => {
 exports.registration = async (req, res, next) => {
   var data = req.body;
   try {
+    let qTtlOneUser = await db.query(
+      "SELECT * FROM tbl_users WHERE phoneNumber = ?",
+      [data.phoneNumber]
+    );
+
     bcrypt.hash(data.password, 11, async (error, hash) => {
       if (error) {
         res.status(500).json({ status: 500, message: error, data: {} });
+      }
+      /// PERLU CEK APAKAH SUDAH PERNAH MENDAFTAR ATAU TIDAK.
+      else if (qTtlOneUser.length > 0) {
+        res.status(400).json({
+          status: 400,
+          message:
+            "Nomor HP telah terdaftar, silahkan login. Jika lupa kata sandi, silahkan reset password.",
+          data: {},
+        });
       } else {
         data.password = hash;
         const result = await db.query(
