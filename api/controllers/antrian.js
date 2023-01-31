@@ -480,9 +480,9 @@ exports.antrianAddV2 = async (req, res, next) => {
       });
     } else {
       //Buat random waktu agar tidak ada yang bersamaan dapat nomor antrian
-      var rnd = Math.floor(Math.random() * (1200 - 986 + 1)) + 986;
-      console.log(`random nilai: ${rnd}`);
-      await sleep(rnd);
+      var rnd2 = Math.floor(Math.random() * (2500 - 986 + 1)) + 986;
+      console.log(`random nilai: ${rnd2}`);
+      await sleep(rnd2);
       function sleep(ms) {
         return new Promise((resolve) => {
           setTimeout(resolve, ms);
