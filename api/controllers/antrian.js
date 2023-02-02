@@ -480,7 +480,7 @@ exports.antrianAddV2 = async (req, res, next) => {
       });
     } else {
       //Buat random waktu agar tidak ada yang bersamaan dapat nomor antrian
-      var rnd2 = Math.floor(Math.random() * (2500 - 986 + 1)) + 986;
+      var rnd2 = Math.floor(Math.random() * (2800 - 986 + 1)) + 986;
       console.log(`random nilai: ${rnd2}`);
       await sleep(rnd2);
       function sleep(ms) {
@@ -489,7 +489,7 @@ exports.antrianAddV2 = async (req, res, next) => {
         });
       }
 
-      var rnd = Math.floor(Math.random() * (2200 - 986 + 1)) + 986;
+      var rnd = Math.floor(Math.random() * (3200 - 986 + 1)) + 986;
       console.log(`random nilai: ${rnd}`);
       await sleep2(rnd);
       function sleep2(ms) {
@@ -555,70 +555,85 @@ exports.antrianAddV2 = async (req, res, next) => {
 
       console.log(`ESTIMASI WAKTU: ${estimasiWaktu}`);
 
-      //Simpan
-      const result = await db.query(
-        "INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code, estimasi, estimasiJam) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          data.serviceId,
-          data.userId,
-          data.scheduleId,
-          data.name,
-          data.phoneNumber,
-          data.email,
-          data.husbandName,
-          data.address,
-          data.birth,
-          kode,
-          qTblSetting[0].estimasi,
-          estimasiWaktu,
-        ]
+      //Cek jika ada no. antrian yang sama
+      let cekKodeAntrian = await db.query(
+        "SELECT * FROM tbl_antrian WHERE jadwalId = ? AND code = ?",
+        [data.scheduleId, kode]
       );
 
-      //simpan nomor rekam medis jika ada
-      if (data.medicalRecordsNumber) {
-        await db.query(
-          "update tbl_users set medicalRecordsNumber = ?, name = ?, phoneNumber = ?, email = ?, birth = ?, husbandName= ?, address= ? WHERE id = ?",
-          [
-            data.medicalRecordsNumber,
-            data.name,
-            data.phoneNumber,
-            data.email,
-            data.birth,
-            data.husbandName,
-            data.address,
-            data.userId,
-          ]
-        );
-      } else {
-        await db.query(
-          "update tbl_users set name = ?, phoneNumber = ?, email = ?, birth = ?, husbandName= ?, address= ? WHERE id = ?",
-          [
-            data.name,
-            data.phoneNumber,
-            data.email,
-            data.birth,
-            data.husbandName,
-            data.address,
-            data.userId,
-          ]
-        );
-      }
-
-      if (result.affectedRows) {
-        const resultAntrian = await db.query(
-          "SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_antrian.estimasiJam, tbl_jadwal.date, tbl_service.name FROM tbl_antrian LEFT JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = ?",
-          [kode]
-        );
-
-        res.status(201).json({
-          status: 201,
-          message: "antrian created",
-          data: resultAntrian[0],
+      if (cekKodeAntrian.length !== 0) {
+        //jika  ada nomor antrian
+        res.status(402).json({
+          status: 402,
+          message: "Kode Antrian telah diambil, ulangi lagi",
+          data: {},
         });
       } else {
-        res
-          .status(404)
-          .json({ status: false, message: "add antrian failed", data: {} });
+        //Simpan
+        const result = await db.query(
+          "INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code, estimasi, estimasiJam) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [
+            data.serviceId,
+            data.userId,
+            data.scheduleId,
+            data.name,
+            data.phoneNumber,
+            data.email,
+            data.husbandName,
+            data.address,
+            data.birth,
+            kode,
+            qTblSetting[0].estimasi,
+            estimasiWaktu,
+          ]
+        );
+
+        //simpan nomor rekam medis jika ada
+        if (data.medicalRecordsNumber) {
+          await db.query(
+            "update tbl_users set medicalRecordsNumber = ?, name = ?, phoneNumber = ?, email = ?, birth = ?, husbandName= ?, address= ? WHERE id = ?",
+            [
+              data.medicalRecordsNumber,
+              data.name,
+              data.phoneNumber,
+              data.email,
+              data.birth,
+              data.husbandName,
+              data.address,
+              data.userId,
+            ]
+          );
+        } else {
+          await db.query(
+            "update tbl_users set name = ?, phoneNumber = ?, email = ?, birth = ?, husbandName= ?, address= ? WHERE id = ?",
+            [
+              data.name,
+              data.phoneNumber,
+              data.email,
+              data.birth,
+              data.husbandName,
+              data.address,
+              data.userId,
+            ]
+          );
+        }
+
+        if (result.affectedRows) {
+          const resultAntrian = await db.query(
+            "SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_antrian.estimasiJam, tbl_jadwal.date, tbl_service.name FROM tbl_antrian LEFT JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = ?",
+            [kode]
+          );
+
+          res.status(201).json({
+            status: 201,
+            message: "antrian created",
+            data: resultAntrian[0],
+          });
+        } else {
+          res
+            .status(404)
+            .json({ status: false, message: "add antrian failed", data: {} });
+        }
       }
     }
   } catch (error) {
