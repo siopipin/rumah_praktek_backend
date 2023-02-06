@@ -1,6 +1,18 @@
 const db = require("./db");
 const helper = require("../../helper");
 
+function getRandomIntInclusive(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 //List antrian
 exports.antrian = async (req, res, next) => {
   try {
@@ -480,23 +492,13 @@ exports.antrianAddV2 = async (req, res, next) => {
       });
     } else {
       //Buat random waktu agar tidak ada yang bersamaan dapat nomor antrian
-      var rnd2 = Math.floor(Math.random() * (2800 - 986 + 1)) + 986;
-      console.log(`random nilai: ${rnd2}`);
-      await sleep(rnd2);
-      function sleep(ms) {
-        return new Promise((resolve) => {
-          setTimeout(resolve, ms);
-        });
-      }
+      const randomNumber = getRandomIntInclusive(1000, 1500);
+      console.log(randomNumber);
+      await sleep(randomNumber);
 
-      var rnd = Math.floor(Math.random() * (3200 - 986 + 1)) + 986;
-      console.log(`random nilai: ${rnd}`);
-      await sleep2(rnd);
-      function sleep2(ms) {
-        return new Promise((resolve) => {
-          setTimeout(resolve, ms);
-        });
-      }
+      const randomNumber2 = getRandomIntInclusive(2500, 3980);
+      console.log(randomNumber2);
+      await sleep(randomNumber2);
 
       //KONDISI BISA BUAT ANTRIAN
       let qTblSetting = await db.query("select * from tbl_setting");
