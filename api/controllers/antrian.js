@@ -2,10 +2,10 @@ const db = require("./db");
 const helper = require("../../helper");
 
 const config = require("../../config");
-const mysql = require("mysql2");
 
-//temp db for create_ticket_number
-const conn = mysql.createConnection(config.db);
+// Connection for sql transaction. Using on createQueue().
+const connection = require("./db_config");
+const { log } = require("async");
 
 function getRandomIntInclusive(min, max) {
   min = Math.ceil(min);
@@ -19,7 +19,7 @@ function sleep(ms) {
   });
 }
 
-function timeNow() {
+async function timeNow() {
   var nowTime = new Date();
   console.log(`waktu sekarang: ${nowTime}`);
   return nowTime;
@@ -47,7 +47,7 @@ async function cekUserBuatAntrianGanda(scheduleId, userId) {
   return sql;
 }
 
-function generateEstimasiWaktu(isi, estimasi) {
+function generateEstimasiWaktu(isi, estimasi, waktuMulai) {
   //Buat estimasi waktu masuk
   let tempTime = 00;
   if (isi === 0) {
@@ -57,7 +57,6 @@ function generateEstimasiWaktu(isi, estimasi) {
   }
 
   let inTime = `00:${tempTime}`;
-  let waktuMulai = qTblJadwal[0].open;
 
   function toSeconds(s) {
     let p = s.split(":");
@@ -819,6 +818,151 @@ exports.createAntrian = async (req, res, next) => {
     }
   } catch (error) {
     console.error(`Error while add antrian`, error.message);
+    next(error);
+  }
+};
+
+exports.createQueue = async (req, res, next) => {
+  let data = req.body;
+  const sql = await connection.getConnection();
+  try {
+    await sql.beginTransaction();
+
+    // get status antrian
+    let qStatusAntrian =
+      "SELECT COUNT(tbl_antrian.id) as filled, (SELECT quota FROM tbl_jadwal WHERE id = ?) as quota FROM tbl_antrian WHERE jadwalId = ? AND status = 0";
+
+    const [result] = await sql.query(qStatusAntrian, [
+      data.scheduleId,
+      data.scheduleId,
+    ]);
+
+    // jika ada jadwal antrian
+    if (result && result.length > 0) {
+      let timeToClose = await timeClose(data.scheduleId);
+      let waktuSaatIni = await timeNow();
+      let userGanda = await cekUserBuatAntrianGanda(
+        data.scheduleId,
+        data.userId
+      );
+
+      console.log(result[0].filled);
+      console.log(result[0].quota);
+      console.log(waktuSaatIni);
+      console.log(timeToClose);
+
+      // cek jika sudah penuh
+      if (result[0].filled >= result[0].quota) {
+        await sql.commit(function () {
+          sql.release();
+        });
+        res
+          .status(400)
+          .json({ status: 400, message: "Maaf, Antrian Penuh.", data: {} });
+      } else if (waktuSaatIni > timeToClose) {
+        await sql.commit(function () {
+          sql.release();
+        });
+
+        res.status(400).json({
+          status: 400,
+          message:
+            "Batas waktu pendaftaran antrian telah usai, silahkan coba lagi besok, terima kasih.",
+          data: {},
+        });
+      } else if (userGanda.length > 0) {
+        await sql.commit(function () {
+          sql.release();
+        });
+        res.status(400).json({
+          status: 400,
+          message:
+            "Anda telah membuat nomor antrian, silahkan batalkan untuk membuat ulang atau daftar besok, terima kasih.",
+          data: {},
+        });
+      } else {
+        // KONDISI BISA BUAT NOMOR ANTRIAN
+        let [qTblSetting] = await sql.query("select * from tbl_setting");
+        var [qTblJadwal] = await sql.query(
+          "SELECT * FROM tbl_jadwal WHERE id = ? ",
+          [data.scheduleId]
+        );
+        let [qLastQueue] = await sql.query(
+          "SELECT code as queueNumber FROM tbl_antrian where jadwalId = ? ORDER BY id DESC LIMIT 1",
+          [data.scheduleId]
+        );
+
+        //Hitung dan buat nomor antrian
+        let lastQueue;
+        if (qLastQueue.length === 0) {
+          lastQueue = 0;
+        } else {
+          lastQueue = qLastQueue[0].queueNumber.substring(
+            qLastQueue[0].queueNumber.indexOf("ID0") + 3
+          );
+        }
+
+        var kode = `${qTblSetting[0].queuePrefix}${data.scheduleId}-ID0${
+          parseInt(lastQueue) + 1
+        }`;
+        console.log(`KODE ANTRIAN: ${kode}`);
+        //GENERATE ESTIMASI WAKTU
+        waktuEstimasi = generateEstimasiWaktu(
+          result[0].filled,
+          qTblSetting[0].estimasi,
+          qTblJadwal[0].open
+        );
+        // insert Queue
+        let [qInsertQueue] = await sql.query(
+          "INSERT INTO tbl_antrian (serviceId, userId, jadwalId, name, phoneNumber, email, husbandName, address, birth, code, estimasi, estimasiJam) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          [
+            data.serviceId,
+            data.userId,
+            data.scheduleId,
+            data.name,
+            data.phoneNumber,
+            data.email,
+            data.husbandName,
+            data.address,
+            data.birth,
+            kode,
+            qTblSetting[0].estimasi,
+            waktuEstimasi,
+          ]
+        );
+
+        if (qInsertQueue && qInsertQueue.affectedRows > 0) {
+          let [resultAntrian] = await sql.query(
+            "SELECT tbl_antrian.code, tbl_antrian.estimasi, tbl_antrian.estimasiJam, tbl_jadwal.date, tbl_service.name FROM tbl_antrian LEFT JOIN tbl_jadwal ON tbl_jadwal.id = tbl_antrian.jadwalId LEFT JOIN tbl_service ON tbl_service.id = tbl_antrian.serviceId WHERE tbl_antrian.code = ?",
+            [kode]
+          );
+
+          if (resultAntrian && resultAntrian.length > 0) {
+            await sql.commit();
+            sql.release();
+
+            res.status(201).json({
+              status: 201,
+              message: "antrian created",
+              data: resultAntrian[0],
+            });
+          } else {
+            await sql.rollback();
+            sql.release();
+            console.log("Rollback and release");
+
+            console.error(`Error while get data from DB`, error.message);
+            next(error);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    await sql.rollback();
+    sql.release();
+    console.log("Rollback and release");
+
+    console.error(`Error while get data from DB`, error.message);
     next(error);
   }
 };

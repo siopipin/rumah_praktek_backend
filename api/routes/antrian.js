@@ -7,7 +7,11 @@ const checkAuth = require("../middleware/check-auth");
 router.get("/", checkAuth, antrianCtrl.antrian);
 router.get("/all", checkAuth, antrianCtrl.antrianAll);
 router.get("/filter/:scheduleId", checkAuth, antrianCtrl.antrianFilter);
-router.post("/", checkAuth, antrianCtrl.antrianAddV2);
+
+// TODO return to antrianAddV2
+// router.post("/", checkAuth, antrianCtrl.antrianAddV2);
+router.post("/", checkAuth, antrianCtrl.createQueue);
+
 router.put("/list/:queueId", checkAuth, antrianCtrl.antrianEdit);
 router.put("/estimasi/:queueId", checkAuth, antrianCtrl.antrianEstimasi);
 router.get("/list/:queueId", checkAuth, antrianCtrl.antrianDetail);
