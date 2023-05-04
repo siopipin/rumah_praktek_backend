@@ -33,7 +33,7 @@ async function timeClose(scheduleId) {
   let closeTime = new Date(sql[0].date);
   let closetimeString = `${closeTime.getFullYear()}-${
     closeTime.getMonth() + 1
-  }-${closeTime.getDate()} ${sql[0].open}:00`;
+  }-${closeTime.getDate()} ${sql[0].close}:00`;
   let closeTimeOnDate = new Date(closetimeString);
   console.log(`waktu tutup: ${closeTimeOnDate}`);
   return closeTimeOnDate;
