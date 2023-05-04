@@ -26,7 +26,7 @@ async function timeNow() {
 }
 
 async function timeClose(scheduleId) {
-  var sql = await db.query("SELECT * FROM tbl_jadwal WHERE id = ? ", [
+  var sql = await db.query("SELECT * FROM tbl_jadwal WHERE id = ?", [
     scheduleId,
   ]);
 
