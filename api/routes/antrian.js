@@ -9,8 +9,8 @@ router.get("/all", checkAuth, antrianCtrl.antrianAll);
 router.get("/filter/:scheduleId", checkAuth, antrianCtrl.antrianFilter);
 
 // TODO return to antrianAddV2
-router.post("/", checkAuth, antrianCtrl.antrianAddV2);
-// router.post("/", checkAuth, antrianCtrl.createQueue);
+// router.post("/", checkAuth, antrianCtrl.antrianAddV2);
+router.post("/", checkAuth, antrianCtrl.createQueue);
 
 router.put("/list/:queueId", checkAuth, antrianCtrl.antrianEdit);
 router.put("/estimasi/:queueId", checkAuth, antrianCtrl.antrianEstimasi);
